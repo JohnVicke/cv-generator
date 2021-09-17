@@ -8,10 +8,8 @@ const PORT = process.env.PORT || 8080;
 
 const github = new GithubAPI();
 
-const ghAuthCheck = (_: Request, res: Response, next: NextFunction) => {
-  if (github.isAuthentiated()) next();
-  else res.redirect("/");
-};
+const ghAuthCheck = (_: Request, res: Response, next: NextFunction) =>
+  github.isAuthentiated() ? next() : res.redirect("/");
 
 (async () => {
   const app = express();

@@ -8,12 +8,7 @@ const express_1 = __importDefault(require("express"));
 const index_1 = require("./github/index");
 const PORT = process.env.PORT || 8080;
 const github = new index_1.GithubAPI();
-const ghAuthCheck = (_, res, next) => {
-    if (github.isAuthentiated())
-        next();
-    else
-        res.redirect("/");
-};
+const ghAuthCheck = (_, res, next) => github.isAuthentiated() ? next() : res.redirect("/");
 (async () => {
     const app = (0, express_1.default)();
     app.get("/", (_, res) => {
