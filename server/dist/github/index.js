@@ -56,9 +56,9 @@ class GithubAPI {
     redirect(res) {
         res.send(`${GITHUB_BASE_AUTH_URL}/authorize?client_id=${this.config.client_id}&scope=repo`);
     }
-    async checkIfRepoExists() {
+    async checkIfRepoExists(token) {
         try {
-            const getRepoRes = await axios_1.default.get(this.user.reposUrl);
+            const getRepoRes = await (0, api_1.getRepo)(this.user.reposUrl, token);
             const cvGenRepo = getRepoRes.data.find((repo) => repo.name === CV_GEN_REPO_NAME);
             return { success: true, repoExists: !!cvGenRepo };
         }
@@ -151,7 +151,7 @@ class GithubAPI {
     }
     async getUser(token) {
         try {
-            const res = await (0, api_1.getAxiosInstance)(token).get('/user');
+            const res = await (0, api_1.getUser)(token);
             const { login, id, node_id: nodeId, repos_url: reposUrl, name } = await res.data;
             const user = {
                 name,

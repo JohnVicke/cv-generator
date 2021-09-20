@@ -6,6 +6,6 @@ export const CV_GENERATOR_BASE_HTML = `<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4
   <title><!-- title placeholder --></title>
 </head>
   <body style="width:100%; height:100%; margin:0;">
-    <iframe><!-- iframe placeholder --></iframe>
+    <iframe src="<!-- iframe placeholder -->" style="width:100%; height:100%;" frameborder="0"></iframe>
   </body>
 </html>`;

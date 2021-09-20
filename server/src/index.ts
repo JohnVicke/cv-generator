@@ -13,6 +13,13 @@ import { GithubAPI } from './github/index';
 import { COOKIE_NAME } from './constants';
 import { createConnection } from 'typeorm';
 import { User } from './entity/User';
+import fileUpload from 'express-fileupload';
+
+interface ExpressFileUploadRequest extends Request {
+  files: {
+    resume?: any;
+  };
+}
 
 const PORT = process.env.PORT || 8080;
 const __prod__ = process.env.NODE_ENV || 'development';
@@ -47,6 +54,8 @@ const ghAuthCheck = (req: Request, res: Response, next: NextFunction) => {
       extended: true
     })
   );
+  app.use(fileUpload());
+
   app.use(
     session({
       name: COOKIE_NAME,
@@ -75,6 +84,7 @@ const ghAuthCheck = (req: Request, res: Response, next: NextFunction) => {
   app.post('/initialize-github', async (req: Request, res: Response) => {
     const { code } = req.body;
     const { success, error } = await github.setToken(code as string);
+
     if (error) return res.status(500).json({ success, error });
     req.session.token = github.getToken();
     return res.redirect('/user');
@@ -88,13 +98,10 @@ const ghAuthCheck = (req: Request, res: Response, next: NextFunction) => {
   app.get(
     '/check-repo-existing',
     ghAuthCheck,
-    async (_: Request, res: Response) => {
-      const { success, error, repoExists } = await github.checkIfRepoExists();
-
-      if (!repoExists) {
-        await github.createRepo();
-        await github.populateRepo();
-      }
+    async (req: Request, res: Response) => {
+      const { success, error, repoExists } = await github.checkIfRepoExists(
+        req.session.token
+      );
       res.send({ success, error, repoExists });
     }
   );
@@ -113,6 +120,25 @@ const ghAuthCheck = (req: Request, res: Response, next: NextFunction) => {
 
     res.send({ populateRes });
   });
+
+  app.post(
+    '/upload-resume',
+    ghAuthCheck,
+    async (req: Request, res: Response) => {
+      if (!req.files) {
+        return res.status(500).send({ error: 'file not found' });
+      }
+
+      const resume = (req as ExpressFileUploadRequest).files.resume;
+      const result = await github.uploadFile(
+        'hello world',
+        resume.data,
+        'resume.pdf'
+      );
+      console.log(result);
+      return res.send({ wow: 'hello' });
+    }
+  );
 
   app.listen(PORT, () => console.log(`server started on ${PORT}`));
 })().catch((error: any) => {

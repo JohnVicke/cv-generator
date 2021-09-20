@@ -8,7 +8,7 @@ export type GetIndexParams = {
 export const getIndexHtml = (params?: GetIndexParams) => {
   const { name, owner } = params!;
   const title = `${name}'s resume`;
-  const iFrame = `https://docs.google.com/gview?url=https://github.com/${owner}/resume/raw/main/resume.pdf&embedded=true`;
+  const iFrame = `https://docs.google.com/gview?url=https://github.com/${owner}/resume2/raw/main/resume.pdf&embedded=true`;
   return CV_GENERATOR_BASE_HTML.replace(
     '<!-- iframe placeholder -->',
     iFrame

@@ -15,6 +15,7 @@ const index_1 = require("./github/index");
 const constants_1 = require("./constants");
 const typeorm_1 = require("typeorm");
 const User_1 = require("./entity/User");
+const express_fileupload_1 = __importDefault(require("express-fileupload"));
 const PORT = process.env.PORT || 8080;
 const __prod__ = process.env.NODE_ENV || 'development';
 const github = new index_1.GithubAPI();
@@ -41,6 +42,7 @@ const ghAuthCheck = (req, res, next) => {
     app.use(express_1.default.urlencoded({
         extended: true
     }));
+    app.use((0, express_fileupload_1.default)());
     app.use((0, express_session_1.default)({
         name: constants_1.COOKIE_NAME,
         store: new RedisStore({
@@ -73,12 +75,8 @@ const ghAuthCheck = (req, res, next) => {
         const { success, error, user } = await github.getUser(req.session.token);
         return res.send({ success, error, user });
     });
-    app.get('/check-repo-existing', ghAuthCheck, async (_, res) => {
-        const { success, error, repoExists } = await github.checkIfRepoExists();
-        if (!repoExists) {
-            await github.createRepo();
-            await github.populateRepo();
-        }
+    app.get('/check-repo-existing', ghAuthCheck, async (req, res) => {
+        const { success, error, repoExists } = await github.checkIfRepoExists(req.session.token);
         res.send({ success, error, repoExists });
     });
     app.get('/enable-github-page', ghAuthCheck, async (_, res) => {
@@ -88,6 +86,15 @@ const ghAuthCheck = (req, res, next) => {
     app.get('/populate-repo', ghAuthCheck, async (_, res) => {
         const populateRes = await github.populateRepo();
         res.send({ populateRes });
+    });
+    app.post('/upload-resume', ghAuthCheck, async (req, res) => {
+        if (!req.files) {
+            return res.status(500).send({ error: 'file not found' });
+        }
+        const resume = req.files.resume;
+        const result = await github.uploadFile('hello world', resume.data, 'resume.pdf');
+        console.log(result);
+        return res.send({ wow: 'hello' });
     });
     app.listen(PORT, () => console.log(`server started on ${PORT}`));
 })().catch((error) => {

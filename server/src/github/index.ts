@@ -5,7 +5,7 @@ import path from 'path';
 import { stringToBase64 } from '../util/Base64';
 import { CV_GENERATOR_INITIAL_COMMIT } from './constants';
 import { getIndexHtml, getReadme, getResume } from './utils';
-import { getAxiosInstance } from './api';
+import { getRepo, getUser } from './api';
 import { getConnection } from 'typeorm';
 
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
@@ -102,9 +102,9 @@ export class GithubAPI {
     );
   }
 
-  async checkIfRepoExists(): Promise<GithubAPIReposResponse> {
+  async checkIfRepoExists(token: string): Promise<GithubAPIReposResponse> {
     try {
-      const getRepoRes = await axios.get(this.user.reposUrl);
+      const getRepoRes = await getRepo(this.user.reposUrl, token);
       const cvGenRepo = getRepoRes.data.find(
         (repo: any) => repo.name === CV_GEN_REPO_NAME
       );
@@ -231,7 +231,7 @@ export class GithubAPI {
 
   async getUser(token: string): Promise<GithubAPIUserResponse> {
     try {
-      const res = await getAxiosInstance(token).get('/user');
+      const res = await getUser(token);
 
       const {
         login,
