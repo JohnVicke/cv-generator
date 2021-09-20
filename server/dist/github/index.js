@@ -4,30 +4,49 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GithubAPI = void 0;
+const dotenv_1 = __importDefault(require("dotenv"));
 const axios_1 = __importDefault(require("axios"));
-const CLIENT_SECRET = process.env.CLIENT_SECRET;
-const CLIENT_ID = process.env.CLIENT_ID;
-const GITHUB_BASE_AUTH_URL = "https://github.com/login/oauth";
-const GITHUB_API_URL = "https://api.github.com";
-const CV_GEN_REPO_NAME = "resume2";
+const path_1 = __importDefault(require("path"));
+const Base64_1 = require("../util/Base64");
+const constants_1 = require("./constants");
+const utils_1 = require("./utils");
+const api_1 = require("./api");
+const typeorm_1 = require("typeorm");
+dotenv_1.default.config({ path: path_1.default.resolve(__dirname, '../../.env') });
+const GITHUB_BASE_AUTH_URL = 'https://github.com/login/oauth';
+const GITHUB_API_URL = 'https://api.github.com';
+const CV_GEN_REPO_NAME = 'resume2';
 class GithubAPI {
+    constructor() {
+        this.config = {
+            client_id: process.env.GITHUB_CLIENT_ID,
+            client_secret: process.env.GITHUB_CLIENT_SECRET
+        };
+        this.axios = axios_1.default.create({
+            baseURL: GITHUB_API_URL,
+            headers: {
+                common: {
+                    Accept: 'application/vnd.github.v3+json'
+                }
+            }
+        });
+    }
     getToken() {
         return this.token;
     }
     async setToken(code) {
-        const body = {
-            client_id: CLIENT_ID,
-            client_secret: CLIENT_SECRET,
-            code,
-        };
+        const body = Object.assign(Object.assign({}, this.config), { code });
         const options = {
             headers: {
-                accept: "application/json",
-            },
+                accept: 'application/json'
+            }
         };
         try {
             const res = await axios_1.default.post(`${GITHUB_BASE_AUTH_URL}/access_token`, body, options);
-            this.token = res.data["access_token"];
+            this.token = res.data['access_token'];
+            this.axios.defaults.headers = {
+                Authorization: `Token ${this.token}`
+            };
             return { success: true };
         }
         catch (err) {
@@ -35,7 +54,7 @@ class GithubAPI {
         }
     }
     redirect(res) {
-        res.redirect(`${GITHUB_BASE_AUTH_URL}/authorize?client_id=${CLIENT_ID}&scope=repo`);
+        res.send(`${GITHUB_BASE_AUTH_URL}/authorize?client_id=${this.config.client_id}&scope=repo`);
     }
     async checkIfRepoExists() {
         try {
@@ -49,18 +68,13 @@ class GithubAPI {
     }
     async createRepo() {
         try {
-            const data = {
-                name: CV_GEN_REPO_NAME,
-                private: false,
+            const body = {
+                name: CV_GEN_REPO_NAME
             };
-            const headers = {
-                Accept: "application/vnd.github.v3+json",
-                Authorization: `Bearer ${this.token}`,
-            };
-            const createRepoRes = await axios_1.default.post(`${GITHUB_API_URL}/user/repos`, {
-                data,
-                headers,
-            });
+            const createRepoRes = await this.axios.post('user/repos', body);
+            if (createRepoRes.data.statusText === 'Created') {
+                console.log('created new repo');
+            }
             return { success: true };
         }
         catch (err) {
@@ -68,22 +82,87 @@ class GithubAPI {
             return { success: false, error: err.message };
         }
     }
-    async getUser() {
-        const headers = {
-            Accept: "application/vnd.github.v3+json",
-            Authorization: `Bearer ${this.token}`,
-        };
+    async createGithubPage() {
         try {
-            const res = await axios_1.default.get(`${GITHUB_API_URL}/user`, {
-                headers,
+            const body = {
+                source: {
+                    branch: 'main'
+                }
+            };
+            const res = await this.axios.post(`/repos/${this.user.login}/${CV_GEN_REPO_NAME}/pages`, body, {
+                headers: {
+                    Accept: 'application/vnd.github.switcheroo-preview+json'
+                }
             });
-            const { login, id, node_id: nodeId, repos_url: reposUrl, } = await res.data;
+            return { success: true, url: res.data.html_url };
+        }
+        catch (err) {
+            console.log(err);
+            if (err.response.status === 409) {
+                return { success: true, message: 'GitHub Pages is already enabled' };
+            }
+            return { success: false, error: err.message };
+        }
+    }
+    async populateRepo() {
+        const { login, name } = this.user;
+        try {
+            const html = await this.uploadFile(constants_1.CV_GENERATOR_INITIAL_COMMIT, (0, utils_1.getIndexHtml)({ owner: login, name }), 'index.html');
+            const resume = await this.uploadFile(constants_1.CV_GENERATOR_INITIAL_COMMIT, (0, utils_1.getResume)(), 'resume.pdf');
+            const readme = await this.uploadFile(constants_1.CV_GENERATOR_INITIAL_COMMIT, (0, utils_1.getReadme)(), 'README.md');
+            return {
+                html,
+                resume,
+                readme
+            };
+        }
+        catch (err) {
+            console.error(err);
+            return { success: false, error: true };
+        }
+    }
+    async checkIfFileExists(fileName) {
+        try {
+            const res = await this.axios.get(`/repos/${this.user.login}/${CV_GEN_REPO_NAME}/contents/${fileName}`);
+            const sha = res.data.sha;
+            return { sha };
+        }
+        catch (err) {
+            console.error(err);
+            return { error: err.message };
+        }
+    }
+    async uploadFile(message, content, fileName) {
+        try {
+            const { sha } = await this.checkIfFileExists(fileName);
+            const body = {
+                message,
+                content: (0, Base64_1.stringToBase64)(content),
+                branch: 'main',
+                sha
+            };
+            const res = await this.axios.put(`/repos/${this.user.login}/${CV_GEN_REPO_NAME}/contents/${fileName}`, body);
+            return { success: res.status === 200 };
+        }
+        catch (err) {
+            console.error(err);
+            return { success: false, error: err.message };
+        }
+    }
+    async getUser(token) {
+        try {
+            const res = await (0, api_1.getAxiosInstance)(token).get('/user');
+            const { login, id, node_id: nodeId, repos_url: reposUrl, name } = await res.data;
             const user = {
+                name,
                 login,
                 id,
                 nodeId,
-                reposUrl,
+                reposUrl
             };
+            await (0, typeorm_1.getConnection)()
+                .getRepository('User')
+                .save({ login, name, reposUrl });
             this.user = user;
             return { success: true, user };
         }

@@ -1,0 +1,10 @@
+{
+  "type": "postgres",
+  "host": "localhost",
+  "port": 5432,
+  "username": "viktor",
+  "password": "postgres",
+  "database": "cv-generator",
+  "entities": ["dist/entities/*.js"],
+  "migrations": ["dist/migrations/*.js"]
+}
