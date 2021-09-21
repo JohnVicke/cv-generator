@@ -8,12 +8,13 @@ import cors from 'cors';
 import Redis from 'ioredis';
 import connectRedis from 'connect-redis';
 import session from 'express-session';
+import fileUpload from 'express-fileupload';
+import { createConnection } from 'typeorm';
 
 import { GithubAPI } from './github/index';
 import { COOKIE_NAME } from './constants';
-import { createConnection } from 'typeorm';
 import { User } from './entity/User';
-import fileUpload from 'express-fileupload';
+import { gitHubRouter } from './routes/githubRoutes';
 
 interface ExpressFileUploadRequest extends Request {
   files: {
@@ -23,6 +24,7 @@ interface ExpressFileUploadRequest extends Request {
 
 const PORT = process.env.PORT || 8080;
 const __prod__ = process.env.NODE_ENV || 'development';
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const github = new GithubAPI();
 
@@ -75,24 +77,26 @@ const ghAuthCheck = (req: Request, res: Response, next: NextFunction) => {
     })
   );
 
-  dotenv.config({ path: path.resolve(__dirname, '../.env') });
+  app.use('/api/v1/github', gitHubRouter);
 
   app.get('/get-redirect', (_: Request, res: Response) => {
-    github.redirect(res);
+    github.getRedirectLink(res);
   });
 
   app.post('/initialize-github', async (req: Request, res: Response) => {
     const { code } = req.body;
-    const { success, error } = await github.setToken(code as string);
+    const { success, error, token } = await github.getAccessToken(
+      code as string
+    );
+    if (error || !token) return res.status(500).json({ success, error });
 
-    if (error) return res.status(500).json({ success, error });
-    req.session.token = github.getToken();
+    req.session.token = token;
     return res.redirect('/user');
   });
 
   app.get('/user', async (req: Request, res: Response) => {
-    const { success, error, user } = await github.getUser(req.session.token);
-    return res.send({ success, error, user });
+    console.log('hello world');
+    return res.send({ succes: false });
   });
 
   app.get(

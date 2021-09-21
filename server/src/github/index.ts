@@ -5,7 +5,11 @@ import path from 'path';
 import { stringToBase64 } from '../util/Base64';
 import { CV_GENERATOR_INITIAL_COMMIT } from './constants';
 import { getIndexHtml, getReadme, getResume } from './utils';
-import { getRepo, getUser } from './api';
+import {
+  getGithubAccessToken,
+  getGithubRepository,
+  getGithubUser
+} from './api';
 import { getConnection } from 'typeorm';
 
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
@@ -31,28 +35,19 @@ type GithubUser = {
 
 type GithubAPIUserResponse = BaseResponse & {
   user?: GithubUser;
+  token?: string;
 };
 
 type GithubAPIReposResponse = BaseResponse & {
   repoExists?: boolean;
 };
 
-type SecretConfig = {
-  client_id: string;
-  client_secret: string;
-};
-
 export class GithubAPI {
   private token: string;
   private user: GithubUser;
-  private config: SecretConfig;
   private axios: AxiosInstance;
 
   constructor() {
-    this.config = {
-      client_id: process.env.GITHUB_CLIENT_ID,
-      client_secret: process.env.GITHUB_CLIENT_SECRET
-    };
     this.axios = axios.create({
       baseURL: GITHUB_API_URL,
       headers: {
@@ -63,48 +58,24 @@ export class GithubAPI {
     });
   }
 
-  getToken() {
-    return this.token;
-  }
-
-  async setToken(code: string): Promise<GithubAPIUserResponse> {
-    const body = {
-      ...this.config,
-      code
-    };
-
-    const options = {
-      headers: {
-        accept: 'application/json'
-      }
-    };
-
+  async getAccessToken(code: string): Promise<GithubAPIUserResponse> {
     try {
-      const res = await axios.post(
-        `${GITHUB_BASE_AUTH_URL}/access_token`,
-        body,
-        options
-      );
-      this.token = res.data['access_token'];
-      this.axios.defaults.headers = {
-        Authorization: `Token ${this.token}`
-      };
-
-      return { success: true };
+      const { data } = await getGithubAccessToken(code);
+      return { success: true, token: data['access_token'] };
     } catch (err) {
       return { success: false, error: err.message };
     }
   }
 
-  redirect(res: Response) {
+  getRedirectLink(res: Response) {
     res.send(
-      `${GITHUB_BASE_AUTH_URL}/authorize?client_id=${this.config.client_id}&scope=repo`
+      `${GITHUB_BASE_AUTH_URL}/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&scope=repo`
     );
   }
 
   async checkIfRepoExists(token: string): Promise<GithubAPIReposResponse> {
     try {
-      const getRepoRes = await getRepo(this.user.reposUrl, token);
+      const getRepoRes = await getGithubRepository(this.user.reposUrl, token);
       const cvGenRepo = getRepoRes.data.find(
         (repo: any) => repo.name === CV_GEN_REPO_NAME
       );
@@ -231,7 +202,7 @@ export class GithubAPI {
 
   async getUser(token: string): Promise<GithubAPIUserResponse> {
     try {
-      const res = await getUser(token);
+      const res = await getGithubUser(token);
 
       const {
         login,

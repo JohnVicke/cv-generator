@@ -1,5 +1,21 @@
 import axios, { AxiosInstance } from 'axios';
+import { stringToBase64 } from '../util/Base64';
 
+const CV_GEN_REPO_NAME = 'resume2';
+
+export type FileExistsQueryParams = {
+  token: string;
+  login: string;
+  filename: string;
+};
+
+export type UploadSingleFileParams = FileExistsQueryParams & {
+  sha?: string;
+  content: string;
+  message: string;
+};
+
+const GITHUB_BASE_AUTH_URL = 'https://github.com/login/oauth';
 const GITHUB_API_URL = 'https://api.github.com';
 let api: AxiosInstance | undefined;
 
@@ -12,9 +28,7 @@ const setToken = (axios: AxiosInstance, token: string) => {
 
 export const getAxiosInstance = (token?: string): AxiosInstance => {
   if (api) {
-    if (token) {
-      setToken(api, token);
-    }
+    if (token) setToken(api, token);
     return api;
   }
   api = axios.create({
@@ -26,16 +40,54 @@ export const getAxiosInstance = (token?: string): AxiosInstance => {
     }
   });
 
-  if (token) {
-    setToken(api, token);
-  }
+  if (token) setToken(api, token);
   return api;
 };
 
-export const getUser = (token: string) => {
+export const getGithubUser = (token: string) => {
+  console.log(token);
   return getAxiosInstance(token).get('/user');
 };
 
-export const getRepo = (userRepoUrl: string, token: string) => {
+export const getGithubRepository = (userRepoUrl: string, token: string) => {
   return getAxiosInstance(token).get(userRepoUrl);
+};
+
+export const getGithubAccessToken = async (code: string) => {
+  const body = {
+    client_id: process.env.GITHUB_CLIENT_ID,
+    client_secret: process.env.GITHUB_CLIENT_SECRET,
+    code
+  };
+  return axios.post(`${GITHUB_BASE_AUTH_URL}/access_token`, body);
+};
+
+export const uploadSingleFile = ({
+  sha,
+  message,
+  content,
+  filename,
+  login,
+  token
+}: UploadSingleFileParams) => {
+  const body = {
+    message,
+    content: stringToBase64(content),
+    branch: 'main',
+    sha
+  };
+  return getAxiosInstance(token).put(
+    `/repos/${login}/${CV_GEN_REPO_NAME}/contents/${filename}`,
+    body
+  );
+};
+
+export const fileExistsOnGithub = ({
+  token,
+  login,
+  filename
+}: FileExistsQueryParams) => {
+  return getAxiosInstance(token).get(
+    `/repos/${login}/${CV_GEN_REPO_NAME}/contents/${filename}`
+  );
 };
