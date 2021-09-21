@@ -9,7 +9,8 @@
     "watch": "tsc -w",
     "build": "tsc",
     "test": "jest",
-    "gen:env": "npx gen-env-types .env -o src/types/env.d.ts -e ."
+    "gen:env": "npx gen-env-types .env -o src/types/env.d.ts -e .",
+    "deploy": "git add . && git commit -m Heroku && git psh heroku HEAD:main"
   },
   "keywords": [],
   "author": "",
