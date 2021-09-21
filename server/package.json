@@ -10,7 +10,7 @@
     "build": "tsc",
     "test": "jest",
     "gen:env": "npx gen-env-types .env -o src/types/env.d.ts -e .",
-    "deploy": "git add . && git commit -m Heroku && git psh heroku HEAD:main"
+    "deploy": "git add . && git commit -m Heroku && git push heroku HEAD:main"
   },
   "keywords": [],
   "author": "",
