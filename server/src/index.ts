@@ -36,7 +36,9 @@ const ghAuthCheck = (req: Request, res: Response, next: NextFunction) => {
 
 (async () => {
   const app = express();
-  app.enable('trust proxy');
+  if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1); // trust first proxy
+  }
   await createConnection({
     type: 'postgres',
     url: process.env.DATABASE_URI,
@@ -74,7 +76,7 @@ const ghAuthCheck = (req: Request, res: Response, next: NextFunction) => {
       cookie: {
         maxAge: 1000 * 60 * 60 * 24 * 365 * 10, // 10 years
         httpOnly: true,
-        secure: true
+        secure: false
       },
       secret: process.env.REDIS_SECRET,
       resave: false
