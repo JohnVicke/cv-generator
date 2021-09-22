@@ -29,3 +29,7 @@ export const getUser = (body: GetUserBody) => {
 export const uploadResume = (formData: FormData) => {
   return getAxiosClient().post('/upload-resume', formData);
 };
+
+export const loginWithGithub = () => {
+  return getAxiosClient().get('/get-redirect');
+};

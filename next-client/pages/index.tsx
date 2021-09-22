@@ -1,21 +1,20 @@
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import styles from '../styles/Home.module.scss';
-import axios from 'axios';
+import { loginWithGithub } from '../api/api';
 import { useRouter } from 'next/dist/client/router';
 
 const Home: NextPage = () => {
   const router = useRouter();
 
-  const loginWithGithub = async () => {
-    const { data } = await axios.get(
-      'http://localhost:8080/api/v1/github/get-redirect'
-    );
+  const login = async () => {
+    const { data } = await loginWithGithub();
+    console.log(data);
     router.push(data);
   };
 
   const goToEditor = () => {
-    loginWithGithub();
+    login();
   };
 
   return (
