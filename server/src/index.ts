@@ -48,12 +48,14 @@ console.error(
   const app = express();
   await createConnection({
     type: 'postgres',
-    url: getDatabaseUrl(
-      process.env.DB_USER,
-      process.env.DB_PASSWORD,
-      process.env.DATABASE_URL,
-      process.env.DB_NAME
-    ),
+    url: __prod__
+      ? process.env.DATABASE_URL
+      : getDatabaseUrl(
+          process.env.DB_USER,
+          process.env.DB_PASSWORD,
+          process.env.DB_HOST,
+          process.env.DB_NAME
+        ),
     logging: true,
     synchronize: true,
     entities: [User],
