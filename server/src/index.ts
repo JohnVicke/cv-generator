@@ -49,13 +49,14 @@ console.error(
   await createConnection({
     type: 'postgres',
     url: __prod__
-      ? process.env.DATABASE_URL
+      ? process.env.DATABASE_URI
       : getDatabaseUrl(
           process.env.DB_USER,
           process.env.DB_PASSWORD,
           process.env.DB_HOST,
           process.env.DB_NAME
         ),
+    ssl: { rejectUnauthorized: false },
     logging: true,
     synchronize: true,
     entities: [User],
