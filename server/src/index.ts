@@ -23,7 +23,6 @@ interface ExpressFileUploadRequest extends Request {
 }
 
 const PORT = process.env.PORT || 8080;
-const __prod__ = process.env.NODE_ENV || 'development';
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const github = new GithubAPI();
