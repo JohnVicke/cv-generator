@@ -48,7 +48,10 @@ const ghAuthCheck = (req: Request, res: Response, next: NextFunction) => {
   });
 
   const RedisStore = connectRedis(session);
-  const redis = new Redis(process.env.REDIS_URL);
+  const redisUrl = process.env.REDIS_TLS_URL
+    ? process.env.REDIS_TLS_URL
+    : process.env.REDIS_URL;
+  const redis = new Redis(redisUrl, { tls: { rejectUnauthorized: false } });
 
   app.use(cors({ credentials: true, origin: process.env.CORS_ORIGIN }));
   app.use(express.json());
@@ -63,6 +66,7 @@ const ghAuthCheck = (req: Request, res: Response, next: NextFunction) => {
     session({
       name: COOKIE_NAME,
       store: new RedisStore({
+        url: process.env.REDIS_URL,
         client: redis,
         disableTouch: true
       }),
