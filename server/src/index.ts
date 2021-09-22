@@ -15,7 +15,6 @@ import { GithubAPI } from './github/index';
 import { COOKIE_NAME } from './constants';
 import { User } from './entity/User';
 import { gitHubRouter } from './routes/githubRoutes';
-import { getDatabaseUrl } from './util/getDatabaseUrl';
 
 interface ExpressFileUploadRequest extends Request {
   files: {
