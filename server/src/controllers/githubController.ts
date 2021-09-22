@@ -44,6 +44,7 @@ export const getAccessToken = async (req: Request, res: Response) => {
     const { data } = await getGithubAccessToken(code);
     const token = (data as string).slice(13, (data as string).indexOf('&'));
     req.session.token = token;
+    console.log(token);
     return res.redirect('/api/v1/github/user');
   } catch (err) {
     return genericErrorMessage(res, err);
