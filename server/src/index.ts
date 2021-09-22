@@ -48,14 +48,7 @@ console.error(
   const app = express();
   await createConnection({
     type: 'postgres',
-    url: __prod__
-      ? process.env.DATABASE_URI
-      : getDatabaseUrl(
-          process.env.DB_USER,
-          process.env.DB_PASSWORD,
-          process.env.DB_HOST,
-          process.env.DB_NAME
-        ),
+    url: process.env.DATABASE_URI,
     ssl: { rejectUnauthorized: false },
     logging: true,
     synchronize: true,
@@ -64,7 +57,7 @@ console.error(
   });
 
   const RedisStore = connectRedis(session);
-  const redis = new Redis(process.env.REDIS_HOST);
+  const redis = new Redis(process.env.REDIS_URL);
 
   app.use(cors({ credentials: true, origin: 'http://localhost:3000' }));
   app.use(express.json());
