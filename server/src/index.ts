@@ -36,6 +36,7 @@ const ghAuthCheck = (req: Request, res: Response, next: NextFunction) => {
 
 (async () => {
   const app = express();
+  app.enable('trust proxy');
   await createConnection({
     type: 'postgres',
     url: process.env.DATABASE_URI,
