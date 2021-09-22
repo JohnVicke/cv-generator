@@ -27,7 +27,7 @@ const Home: NextPage = () => {
       </Head>
 
       <main className={styles.main}></main>
-      <h1>helloe world</h1>
+      <h1>CV-GENERATOR</h1>
       <button onClick={goToEditor}>Go To editor</button>
 
       <footer className={styles.footer}></footer>

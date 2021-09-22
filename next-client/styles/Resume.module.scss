@@ -1,5 +1,11 @@
 .root {
-  width: 100%;
-  background-color: red;
-  aspect-ratio: 2480/ 3508;
+  width: 620px;
+  height: 877px;
+}
+
+.buttons {
+  display: flex;
+  flex-direction: row;
+  margin: 2rem;
+  padding-bottom: 2rem;
 }
