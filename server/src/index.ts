@@ -40,14 +40,12 @@ const ghAuthCheck = (req: Request, res: Response, next: NextFunction) => {
   const app = express();
   await createConnection({
     type: 'postgres',
-    url: __prod__
-      ? process.env.DATABASE_URL
-      : getDatabaseUrl(
-          process.env.DB_USER,
-          process.env.DB_PASSWORD,
-          process.env.DB_HOST,
-          process.env.DB_NAME
-        ),
+    url: getDatabaseUrl(
+      process.env.DB_USER,
+      process.env.DB_PASSWORD,
+      process.env.DATABASE_URL,
+      process.env.DB_NAME
+    ),
     logging: true,
     synchronize: true,
     entities: [User],
@@ -160,7 +158,5 @@ const ghAuthCheck = (req: Request, res: Response, next: NextFunction) => {
 
   app.listen(PORT, () => console.log(`server started on ${PORT}`));
 })().catch((error: any) => {
-  console.error(error);
-});
   console.error(error);
 });
