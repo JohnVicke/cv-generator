@@ -15,6 +15,7 @@ import { GithubAPI } from './github/index';
 import { COOKIE_NAME } from './constants';
 import { User } from './entity/User';
 import { gitHubRouter } from './routes/githubRoutes';
+import { getDatabaseUrl } from './util/getDatabaseUrl';
 
 interface ExpressFileUploadRequest extends Request {
   files: {
@@ -37,9 +38,15 @@ const ghAuthCheck = (req: Request, res: Response, next: NextFunction) => {
 
 (async () => {
   const app = express();
+  console.log(process.env);
   await createConnection({
     type: 'postgres',
-    url: process.env.DATABASE_URL,
+    url: getDatabaseUrl(
+      process.env.DB_USER,
+      process.env.DB_PASSWORD,
+      process.env.DB_HOST,
+      process.env.DB_NAME
+    ),
     logging: true,
     synchronize: true,
     entities: [User],
@@ -47,7 +54,7 @@ const ghAuthCheck = (req: Request, res: Response, next: NextFunction) => {
   });
 
   const RedisStore = connectRedis(session);
-  const redis = new Redis(process.env.REDIS_URL);
+  const redis = new Redis(process.env.REDIS_HOST);
 
   app.use(cors({ credentials: true, origin: 'http://localhost:3000' }));
   app.use(express.json());
@@ -77,6 +84,13 @@ const ghAuthCheck = (req: Request, res: Response, next: NextFunction) => {
     })
   );
 
+  app.get('/api/v1/', (_, res: Response) => {
+    res.send({
+      version: 1,
+      name: 'CV-Generator REST api'
+    });
+  });
+
   app.use('/api/v1/github', gitHubRouter);
 
   app.get('/get-redirect', (_: Request, res: Response) => {
@@ -94,9 +108,8 @@ const ghAuthCheck = (req: Request, res: Response, next: NextFunction) => {
     return res.redirect('/user');
   });
 
-  app.get('/user', async (req: Request, res: Response) => {
-    console.log('hello world');
-    return res.send({ succes: false });
+  app.get('/user', async (_: Request, res: Response) => {
+    res.send({ succes: false });
   });
 
   app.get(

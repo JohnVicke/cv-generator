@@ -37,6 +37,7 @@
     "express-fileupload": "^1.2.1",
     "express-session": "^1.17.2",
     "ioredis": "^4.27.9",
+    "pg": "^8.7.1",
     "postgresql": "0.0.1",
     "reflect-metadata": "^0.1.13",
     "typeorm": "^0.2.37"
