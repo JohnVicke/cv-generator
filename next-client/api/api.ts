@@ -6,12 +6,14 @@ const getAxiosClient = (): AxiosInstance => {
   if (api) {
     return api;
   }
+  const baseUrl = 'https://resume-hosting.herokuapp.com';
+
   api = axios.create({
-    baseURL: 'http://localhost:8080/api/v1/github',
+    baseURL: `${baseUrl}/api/v1/github`,
     withCredentials: true
   });
   api.defaults.headers = {
-    'Access-Control-Allow-Origin': 'http://localhost:8080'
+    'Access-Control-Allow-Origin': baseUrl
   };
   return api;
 };
