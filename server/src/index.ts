@@ -69,11 +69,11 @@ const ghAuthCheck = (req: Request, res: Response, next: NextFunction) => {
         client: redis,
         disableTouch: true
       }),
+      proxy: true,
       cookie: {
         maxAge: 1000 * 60 * 60 * 24 * 365 * 10, // 10 years
         httpOnly: true,
-        secure: true,
-        sameSite: 'none'
+        secure: true
       },
       secret: process.env.REDIS_SECRET,
       resave: false
