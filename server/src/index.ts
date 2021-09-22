@@ -36,14 +36,6 @@ const ghAuthCheck = (req: Request, res: Response, next: NextFunction) => {
   return res.send({ success: false, message: 'not logged in' });
 };
 
-console.error(
-  getDatabaseUrl(
-    process.env.DB_USER,
-    process.env.DB_PASSWORD,
-    process.env.DATABASE_URL,
-    process.env.DB_NAME
-  )
-);
 (async () => {
   const app = express();
   await createConnection({
