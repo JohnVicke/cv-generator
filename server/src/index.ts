@@ -50,7 +50,7 @@ const ghAuthCheck = (req: Request, res: Response, next: NextFunction) => {
   const RedisStore = connectRedis(session);
   const redis = new Redis(process.env.REDIS_URL);
 
-  app.use(cors({ credentials: true }));
+  app.use(cors({ credentials: true, origin: process.env.CORS_ORIGIN }));
   app.use(express.json());
   app.use(
     express.urlencoded({
