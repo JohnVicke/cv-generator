@@ -22,6 +22,7 @@ interface ExpressFileUploadRequest extends Request {
   };
 }
 
+const __prod__ = process.env.NODE_ENV === 'production';
 const PORT = process.env.PORT || 8080;
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
@@ -36,13 +37,13 @@ const ghAuthCheck = (req: Request, res: Response, next: NextFunction) => {
 
 (async () => {
   const app = express();
-  if (process.env.NODE_ENV === 'production') {
-    app.set('trust proxy', 1); // trust first proxy
+  if (__prod__) {
+    app.set('proxy', 1); // trust first proxy
   }
   await createConnection({
     type: 'postgres',
     url: process.env.DATABASE_URI,
-    ssl: { rejectUnauthorized: false },
+    ssl: { rejectUnauthorized: __prod__ },
     logging: true,
     synchronize: true,
     entities: [User],
@@ -50,10 +51,14 @@ const ghAuthCheck = (req: Request, res: Response, next: NextFunction) => {
   });
 
   const RedisStore = connectRedis(session);
-  const redisUrl = process.env.REDIS_TLS_URL
-    ? process.env.REDIS_TLS_URL
-    : process.env.REDIS_URL;
-  const redis = new Redis(redisUrl, { tls: { rejectUnauthorized: false } });
+
+  const redisOptions = __prod__
+    ? {
+        tls: { rejectUnauthorized: false }
+      }
+    : undefined;
+
+  const redis = new Redis(process.env.TLS_URL, redisOptions);
 
   app.use(cors({ credentials: true, origin: process.env.CORS_ORIGIN }));
   app.use(express.json());
@@ -68,15 +73,15 @@ const ghAuthCheck = (req: Request, res: Response, next: NextFunction) => {
     session({
       name: COOKIE_NAME,
       store: new RedisStore({
-        url: process.env.REDIS_URL,
         client: redis,
         disableTouch: true
       }),
-      proxy: true,
       cookie: {
         maxAge: 1000 * 60 * 60 * 24 * 365 * 10, // 10 years
         httpOnly: true,
-        secure: false
+        secure: __prod__,
+        sameSite: __prod__ ? 'none' : 'lax',
+        domain: __prod__ ? process.env.CORS_ORIGIN : undefined
       },
       secret: process.env.REDIS_SECRET,
       resave: false

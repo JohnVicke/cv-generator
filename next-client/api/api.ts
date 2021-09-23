@@ -6,7 +6,7 @@ const getAxiosClient = (): AxiosInstance => {
   if (api) {
     return api;
   }
-  const baseUrl = 'https://resume-hosting.herokuapp.com';
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   api = axios.create({
     baseURL: `${baseUrl}/api/v1/github`,
@@ -32,4 +32,12 @@ export const uploadResume = (formData: FormData) => {
 
 export const loginWithGithub = () => {
   return getAxiosClient().get('/get-redirect');
+};
+
+export const getRepository = () => {
+  return getAxiosClient().get('/repo-exists');
+};
+
+export const createRepo = () => {
+  return getAxiosClient().get('/create-repo');
 };

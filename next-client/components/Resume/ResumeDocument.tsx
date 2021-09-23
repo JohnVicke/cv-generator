@@ -1,5 +1,12 @@
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
+import {
+  Document,
+  Page,
+  Text,
+  View,
+  StyleSheet,
+  Image
+} from '@react-pdf/renderer';
 import { suppressReactRendererConsoleError } from '../../utils/suppressReactRendererConsoleError';
 
 const pdfStyles = StyleSheet.create({
@@ -13,14 +20,27 @@ const pdfStyles = StyleSheet.create({
     width: '100%',
     minHeight: '122px',
     display: 'flex',
-    flexDirection: 'column',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     padding: 20
+  },
+  headerInfo: {
+    width: '70%',
+    display: 'flex',
+    flexDirection: 'column'
+  },
+  avatar: {
+    width: 60,
+    height: 60,
+    borderRadius: '50%'
   },
   contact: {
     backgroundColor: '#1A202C',
     height: 20,
     display: 'flex',
-    justifyContent: 'space-evenly',
+    flexDirection: 'row',
+    justifyContent: 'space-around',
     alignItems: 'center',
     color: '#fff',
     paddingTop: 4,
@@ -47,7 +67,7 @@ const pdfStyles = StyleSheet.create({
   },
 
   column: {
-    flex: '50%'
+    flexGrow: 0.5
   },
   expSection: {
     margin: 10,
@@ -86,12 +106,15 @@ export const ResumeDocument: React.FC<ResumeProps> = ({}) => {
     <Document>
       <Page size="A4" style={pdfStyles.page}>
         <View style={pdfStyles.header}>
-          <Text style={pdfStyles.fullName}>Viktor Malmedal</Text>
-          <Text style={pdfStyles.role}>Software Engineer</Text>
-          <Text style={pdfStyles.introduction}>
-            Hard-working and enthusiastic engineering student interested in IT
-            and everything in its orbit.
-          </Text>
+          <View style={pdfStyles.headerInfo}>
+            <Text style={pdfStyles.fullName}>Viktor Malmedal</Text>
+            <Text style={pdfStyles.role}>Software Engineer</Text>
+            <Text style={pdfStyles.introduction}>
+              Hard-working and enthusiastic engineering student interested in IT
+              and everything in its orbit.
+            </Text>
+          </View>
+          <Image style={pdfStyles.avatar} src="/profile_pic.jpeg" />
         </View>
 
         <View style={pdfStyles.contact}>

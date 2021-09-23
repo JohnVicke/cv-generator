@@ -3,16 +3,21 @@ import { stringToBase64 } from '../util/Base64';
 
 const CV_GEN_REPO_NAME = 'resume2';
 
-export type FileExistsQueryParams = {
+export type FileExistsQueryOptions = {
   token: string;
   login: string;
   filename: string;
 };
 
-export type UploadSingleFileParams = FileExistsQueryParams & {
+export type UploadSingleFileOptions = FileExistsQueryOptions & {
   sha?: string;
   content: string;
   message: string;
+};
+
+export type RepoExistsOptions = {
+  token: string;
+  userRepoUrl: string;
 };
 
 const GITHUB_BASE_AUTH_URL = 'https://github.com/login/oauth';
@@ -45,7 +50,6 @@ export const getAxiosInstance = (token?: string): AxiosInstance => {
 };
 
 export const getGithubUser = (token: string) => {
-  console.log(token);
   return getAxiosInstance(token).get('/user');
 };
 
@@ -69,7 +73,7 @@ export const uploadSingleFile = ({
   filename,
   login,
   token
-}: UploadSingleFileParams) => {
+}: UploadSingleFileOptions) => {
   const body = {
     message,
     content: stringToBase64(content),
@@ -86,8 +90,33 @@ export const fileExistsOnGithub = ({
   token,
   login,
   filename
-}: FileExistsQueryParams) => {
+}: FileExistsQueryOptions) => {
   return getAxiosInstance(token).get(
     `/repos/${login}/${CV_GEN_REPO_NAME}/contents/${filename}`
+  );
+};
+
+export const createGitHubRepository = (token: string) => {
+  const body = {
+    name: CV_GEN_REPO_NAME
+  };
+  return getAxiosInstance(token).post('user/repos', body);
+};
+
+export const makeRepoIntoGitHubPage = (login: string, token: string) => {
+  const body = {
+    source: {
+      branch: 'main'
+    }
+  };
+
+  return getAxiosInstance(token).post(
+    `/repos/${login}/${CV_GEN_REPO_NAME}/pages`,
+    body,
+    {
+      headers: {
+        Accept: 'application/vnd.github.switcheroo-preview+json'
+      }
+    }
   );
 };

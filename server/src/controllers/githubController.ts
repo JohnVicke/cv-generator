@@ -1,12 +1,18 @@
 import { Request, Response } from 'express';
 import {
   fileExistsOnGithub,
+  createGitHubRepository,
   getGithubAccessToken,
+  getGithubRepository,
   getGithubUser,
-  uploadSingleFile
+  uploadSingleFile,
+  makeRepoIntoGitHubPage
 } from '../github/api';
 import { getConnection } from 'typeorm';
 import { User } from 'src/entity/User';
+
+const GITHUB_BASE_AUTH_URL = 'https://github.com/login/oauth';
+const CV_GEN_REPO_NAME = 'resume2';
 
 type FileExistsQueryParams = {
   token: string;
@@ -19,8 +25,6 @@ interface ExpressFileUploadRequest extends Request {
     resume?: any;
   };
 }
-
-const GITHUB_BASE_AUTH_URL = 'https://github.com/login/oauth';
 
 const genericErrorMessage = (res: Response, err: Error) => {
   return res.status(500).json({ success: false, error: err.message });
@@ -94,7 +98,6 @@ export const uploadResume = async (req: Request, res: Response) => {
   }
 
   const user = (await getConnection().getRepository('User').findOne(1)) as User;
-  console.log('user', user);
 
   const getFileShaParams: FileExistsQueryParams = {
     token: req.session.token,
@@ -104,8 +107,6 @@ export const uploadResume = async (req: Request, res: Response) => {
 
   const { sha } = await getFileSha(getFileShaParams);
   const resume = (req as ExpressFileUploadRequest).files.resume;
-
-  console.log('sha', sha);
 
   const { data } = await uploadSingleFile({
     ...getFileShaParams,
@@ -117,4 +118,42 @@ export const uploadResume = async (req: Request, res: Response) => {
   console.log('data: ', data);
 
   return res.send({ wow: 'hello' });
+};
+
+export const checkIfRepoExists = async (req: Request, res: Response) => {
+  try {
+    const user = (await getConnection()
+      .getRepository('User')
+      .findOne(1)) as User;
+    const { data } = await getGithubRepository(
+      user.reposUrl,
+      req.session.token
+    );
+    const cvGenRepoExists = data.find(
+      (repo: any) => repo.name === CV_GEN_REPO_NAME
+    );
+    return res.send({ success: true, repoExists: !!cvGenRepoExists });
+  } catch (err) {
+    return genericErrorMessage(res, err.message);
+  }
+};
+
+const populateRepository = () => {};
+
+export const createRepository = async (req: Request, res: Response) => {
+  try {
+    const { token } = req.session;
+    const createGitHubRepoRes = await createGitHubRepository(token);
+    if (createGitHubRepoRes.data.statusText === 'Created') {
+      const user = (await getConnection()
+        .getRepository('User')
+        .findOne(1)) as User;
+      const githubPageRes = await makeRepoIntoGitHubPage(user.login, token);
+      return res.send({ success: true, generatedRepo: true });
+    }
+
+    return res.send({ success: false });
+  } catch (err) {
+    return genericErrorMessage(res, err.message);
+  }
 };

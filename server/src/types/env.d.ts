@@ -5,12 +5,8 @@ declare namespace NodeJS {
     GITHUB_CLIENT_ID: string;
     GITHUB_CLIENT_SECRET: string;
     REDIS_SECRET: string;
-    REDIS_URL: string;
-    DATABASE_URL: string;
-    REDIS_HOST: string;
-    DB_HOST: string;
-    DB_USER: string;
-    DB_PASSWORD: string;
-    DB_NAME: string;
+    DATABASE_URI: string;
+    REDIS_TLS_URL: string;
+    CORS_ORIGIN: string;
   }
 }
