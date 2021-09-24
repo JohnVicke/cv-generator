@@ -73,9 +73,9 @@ export class GithubAPI {
     );
   }
 
-  async checkIfRepoExists(token: string): Promise<GithubAPIReposResponse> {
+  async checkIfRepoExists(): Promise<GithubAPIReposResponse> {
     try {
-      const getRepoRes = await getGithubRepository(this.user.reposUrl, token);
+      const getRepoRes = await getGithubRepository(this.user.reposUrl);
       const cvGenRepo = getRepoRes.data.find(
         (repo: any) => repo.name === CV_GEN_REPO_NAME
       );
@@ -200,9 +200,9 @@ export class GithubAPI {
     }
   }
 
-  async getUser(token: string): Promise<GithubAPIUserResponse> {
+  async getUser(): Promise<GithubAPIUserResponse> {
     try {
-      const res = await getGithubUser(token);
+      const res = await getGithubUser();
 
       const {
         login,

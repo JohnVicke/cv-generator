@@ -1,43 +1,40 @@
-import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
+import { AxiosRequestConfig } from 'axios';
+import Axios from '../utils/Axios';
 
-let api: AxiosInstance | undefined;
+const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-const getAxiosClient = (): AxiosInstance => {
-  if (api) {
-    return api;
-  }
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-
-  api = axios.create({
-    baseURL: `${baseUrl}/api/v1/github`,
-    withCredentials: true
-  });
-  api.defaults.headers = {
+const axiosInstance = Axios;
+axiosInstance.setDefaults({
+  baseURL: `${baseUrl as string}/api/v1/github/`,
+  headers: {
     'Access-Control-Allow-Origin': baseUrl
-  };
-  return api;
-};
+  }
+});
+
+const config = { withCredentials: true };
 
 type GetUserBody = AxiosRequestConfig & {
   code: string;
 };
 
 export const getUser = (body: GetUserBody) => {
-  return getAxiosClient().post('/initialize-github', body);
+  return axiosInstance.post('/initialize-github', body);
 };
 
 export const uploadResume = (formData: FormData) => {
-  return getAxiosClient().post('/upload-resume', formData);
+  return axiosInstance.post('/upload-resume', formData, {
+    widthCredentials: true
+  });
 };
 
 export const loginWithGithub = () => {
-  return getAxiosClient().get('/get-redirect');
+  return axiosInstance.get('/get-redirect', '', config);
 };
 
 export const getRepository = () => {
-  return getAxiosClient().get('/repo-exists');
+  return axiosInstance.get('/repo-exists', '', config);
 };
 
 export const createRepo = () => {
-  return getAxiosClient().get('/create-repo');
+  return axiosInstance.get('/create-repo', '', config);
 };

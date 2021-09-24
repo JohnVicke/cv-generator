@@ -6,7 +6,8 @@ import {
   getGithubRepository,
   getGithubUser,
   uploadSingleFile,
-  makeRepoIntoGitHubPage
+  makeRepoIntoGitHubPage,
+  setGitHubToken
 } from '../github/api';
 import { getConnection } from 'typeorm';
 import { User } from 'src/entity/User';
@@ -48,15 +49,16 @@ export const getAccessToken = async (req: Request, res: Response) => {
     const { data } = await getGithubAccessToken(code);
     const token = (data as string).slice(13, (data as string).indexOf('&'));
     req.session.token = token;
+    setGitHubToken(token);
     return res.redirect('/api/v1/github/user');
   } catch (err) {
     return genericErrorMessage(res, err);
   }
 };
 
-export const intializeUser = async (req: Request, res: Response) => {
+export const intializeUser = async (_: Request, res: Response) => {
   try {
-    const { data } = await getGithubUser(req.session.token);
+    const { data } = await getGithubUser();
 
     const userRepo = getConnection().getRepository('User');
 
@@ -79,13 +81,9 @@ export const intializeUser = async (req: Request, res: Response) => {
   }
 };
 
-const getFileSha = async ({
-  token,
-  login,
-  filename
-}: FileExistsQueryParams) => {
+const getFileSha = async ({ login, filename }: FileExistsQueryParams) => {
   try {
-    const { data } = await fileExistsOnGithub({ token, login, filename });
+    const { data } = await fileExistsOnGithub({ login, filename });
     return { sha: data.sha };
   } catch (err) {
     return { error: err.message };
@@ -115,20 +113,15 @@ export const uploadResume = async (req: Request, res: Response) => {
     sha
   });
 
-  console.log('data: ', data);
-
   return res.send({ wow: 'hello' });
 };
 
-export const checkIfRepoExists = async (req: Request, res: Response) => {
+export const checkIfRepoExists = async (_: Request, res: Response) => {
   try {
     const user = (await getConnection()
       .getRepository('User')
       .findOne(1)) as User;
-    const { data } = await getGithubRepository(
-      user.reposUrl,
-      req.session.token
-    );
+    const { data } = await getGithubRepository(user.reposUrl);
     const cvGenRepoExists = data.find(
       (repo: any) => repo.name === CV_GEN_REPO_NAME
     );
@@ -143,12 +136,12 @@ const populateRepository = () => {};
 export const createRepository = async (req: Request, res: Response) => {
   try {
     const { token } = req.session;
-    const createGitHubRepoRes = await createGitHubRepository(token);
+    const createGitHubRepoRes = await createGitHubRepository();
     if (createGitHubRepoRes.data.statusText === 'Created') {
       const user = (await getConnection()
         .getRepository('User')
         .findOne(1)) as User;
-      const githubPageRes = await makeRepoIntoGitHubPage(user.login, token);
+      const githubPageRes = await makeRepoIntoGitHubPage(user.login);
       return res.send({ success: true, generatedRepo: true });
     }
 

@@ -1,10 +1,10 @@
-import axios, { AxiosInstance } from 'axios';
+import axios from 'axios';
+import Axios from '../util/Axios';
 import { stringToBase64 } from '../util/Base64';
 
 const CV_GEN_REPO_NAME = 'resume2';
 
 export type FileExistsQueryOptions = {
-  token: string;
   login: string;
   filename: string;
 };
@@ -16,45 +16,32 @@ export type UploadSingleFileOptions = FileExistsQueryOptions & {
 };
 
 export type RepoExistsOptions = {
-  token: string;
   userRepoUrl: string;
 };
 
 const GITHUB_BASE_AUTH_URL = 'https://github.com/login/oauth';
 const GITHUB_API_URL = 'https://api.github.com';
-let api: AxiosInstance | undefined;
 
-const setToken = (axios: AxiosInstance, token: string) => {
-  axios.defaults.headers = {
-    Authorization: `Bearer ${token}`
-  };
-  return axios;
-};
-
-export const getAxiosInstance = (token?: string): AxiosInstance => {
-  if (api) {
-    if (token) setToken(api, token);
-    return api;
-  }
-  api = axios.create({
-    baseURL: GITHUB_API_URL,
-    headers: {
-      common: {
-        Accept: 'application/vnd.github.v3+json'
-      }
+const axiosInstance = Axios;
+axiosInstance.setDefaults({
+  baseURL: GITHUB_API_URL,
+  headers: {
+    common: {
+      Accept: 'application/vnd.github.v3+json'
     }
-  });
+  }
+});
 
-  if (token) setToken(api, token);
-  return api;
+export const setGitHubToken = (token: string) => {
+  axiosInstance.setBearerToken(token);
 };
 
-export const getGithubUser = (token: string) => {
-  return getAxiosInstance(token).get('/user');
+export const getGithubUser = () => {
+  return axiosInstance.get('/user');
 };
 
-export const getGithubRepository = (userRepoUrl: string, token: string) => {
-  return getAxiosInstance(token).get(userRepoUrl);
+export const getGithubRepository = (userRepoUrl: string) => {
+  return axiosInstance.get(userRepoUrl);
 };
 
 export const getGithubAccessToken = async (code: string) => {
@@ -71,8 +58,7 @@ export const uploadSingleFile = ({
   message,
   content,
   filename,
-  login,
-  token
+  login
 }: UploadSingleFileOptions) => {
   const body = {
     message,
@@ -80,43 +66,38 @@ export const uploadSingleFile = ({
     branch: 'main',
     sha
   };
-  return getAxiosInstance(token).put(
+  return axiosInstance.put(
     `/repos/${login}/${CV_GEN_REPO_NAME}/contents/${filename}`,
     body
   );
 };
 
 export const fileExistsOnGithub = ({
-  token,
   login,
   filename
 }: FileExistsQueryOptions) => {
-  return getAxiosInstance(token).get(
+  return axiosInstance.get(
     `/repos/${login}/${CV_GEN_REPO_NAME}/contents/${filename}`
   );
 };
 
-export const createGitHubRepository = (token: string) => {
+export const createGitHubRepository = () => {
   const body = {
     name: CV_GEN_REPO_NAME
   };
-  return getAxiosInstance(token).post('user/repos', body);
+  return axiosInstance.post('user/repos', body);
 };
 
-export const makeRepoIntoGitHubPage = (login: string, token: string) => {
+export const makeRepoIntoGitHubPage = (login: string) => {
   const body = {
     source: {
       branch: 'main'
     }
   };
 
-  return getAxiosInstance(token).post(
-    `/repos/${login}/${CV_GEN_REPO_NAME}/pages`,
-    body,
-    {
-      headers: {
-        Accept: 'application/vnd.github.switcheroo-preview+json'
-      }
+  return axiosInstance.post(`/repos/${login}/${CV_GEN_REPO_NAME}/pages`, body, {
+    headers: {
+      Accept: 'application/vnd.github.switcheroo-preview+json'
     }
-  );
+  });
 };
