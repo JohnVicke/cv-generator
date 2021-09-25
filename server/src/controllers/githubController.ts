@@ -56,7 +56,7 @@ export const getAccessToken = async (req: Request, res: Response) => {
   }
 };
 
-export const intializeUser = async (req: Request, res: Response) => {
+export const intializeUser = async (_: Request, res: Response) => {
   try {
     const { data } = await getGithubUser();
 
@@ -113,6 +113,8 @@ export const uploadResume = async (req: Request, res: Response) => {
     sha
   });
 
+  console.log(data);
+
   return res.send({ wow: 'hello' });
 };
 
@@ -131,17 +133,15 @@ export const checkIfRepoExists = async (_: Request, res: Response) => {
   }
 };
 
-const populateRepository = () => {};
-
-export const createRepository = async (req: Request, res: Response) => {
+export const createRepository = async (_: Request, res: Response) => {
   try {
-    const { token } = req.session;
     const createGitHubRepoRes = await createGitHubRepository();
     if (createGitHubRepoRes.data.statusText === 'Created') {
       const user = (await getConnection()
         .getRepository('User')
         .findOne(1)) as User;
       const githubPageRes = await makeRepoIntoGitHubPage(user.login);
+      console.log(githubPageRes);
       return res.send({ success: true, generatedRepo: true });
     }
 
