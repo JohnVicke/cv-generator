@@ -72,7 +72,6 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
   );
 
   app.use(express.static(reactPath));
-
   app.get('/api/v1/', (_, res: Response) => {
     res.send({
       version: 1,
@@ -82,7 +81,7 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
   app.use('/api/v1/github', gitHubRouter);
 
-  app.use('*', (_, res: Response) => {
+  app.get('*', (_, res: Response) => {
     res.sendFile(path.join(reactPath, 'index.html'));
   });
 
