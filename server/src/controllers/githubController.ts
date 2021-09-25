@@ -150,3 +150,12 @@ export const createRepository = async (_: Request, res: Response) => {
     return genericErrorMessage(res, err.message);
   }
 };
+
+export const handleOauthCallback = async (req: Request, res: Response) => {
+  const { code } = req.query;
+  const { data } = await getGithubAccessToken(code as string);
+  const token = (data as string).slice(13, (data as string).indexOf('&'));
+  req.session.token = token;
+  setGitHubToken(token);
+  return res.redirect('/home');
+};
