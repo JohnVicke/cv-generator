@@ -1,42 +1,22 @@
-import 'dotenv-safe';
-
-import express from 'express';
-import { Request, Response, NextFunction } from 'express';
-import dotenv from 'dotenv';
-import path from 'path';
-import cors from 'cors';
-import Redis from 'ioredis';
 import connectRedis from 'connect-redis';
-import session from 'express-session';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import 'dotenv-safe';
+import express, { Response } from 'express';
 import fileUpload from 'express-fileupload';
+import session from 'express-session';
+import Redis from 'ioredis';
+import path from 'path';
 import { createConnection } from 'typeorm';
-
-import { GithubAPI } from './github/index';
 import { COOKIE_NAME } from './constants';
 import { User } from './entity/User';
 import { gitHubRouter } from './routes/githubRoutes';
-import { getGithubAccessToken, setGitHubToken } from './github/api';
-
-interface ExpressFileUploadRequest extends Request {
-  files: {
-    resume?: any;
-  };
-}
 
 const reactPath = path.join(__dirname, '/views/');
 
 const __prod__ = process.env.NODE_ENV === 'production';
 const PORT = process.env.PORT || 8080;
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
-
-const github = new GithubAPI();
-
-const ghAuthCheck = (req: Request, res: Response, next: NextFunction) => {
-  if (req.session.token) {
-    return next();
-  }
-  return res.send({ success: false, message: 'not logged in' });
-};
 
 (async () => {
   const app = express();
