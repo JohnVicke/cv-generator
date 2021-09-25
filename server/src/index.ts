@@ -15,12 +15,7 @@ import { GithubAPI } from './github/index';
 import { COOKIE_NAME } from './constants';
 import { User } from './entity/User';
 import { gitHubRouter } from './routes/githubRoutes';
-import {
-  getGithubAccessToken,
-  getGithubUser,
-  setGitHubToken
-} from './github/api';
-import { getAccessToken } from './controllers/githubController';
+import { getGithubAccessToken, setGitHubToken } from './github/api';
 
 interface ExpressFileUploadRequest extends Request {
   files: {
@@ -137,7 +132,7 @@ const ghAuthCheck = (req: Request, res: Response, next: NextFunction) => {
   app.get(
     '/check-repo-existing',
     ghAuthCheck,
-    async (req: Request, res: Response) => {
+    async (_: Request, res: Response) => {
       const { success, error, repoExists } = await github.checkIfRepoExists();
       res.send({ success, error, repoExists });
     }
