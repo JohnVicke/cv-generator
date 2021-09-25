@@ -20,6 +20,8 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 (async () => {
   const app = express();
+  app.use(express.static(reactPath));
+
   if (__prod__) {
     app.set('proxy', 1); // trust first proxy
   }
@@ -71,7 +73,6 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
     })
   );
 
-  app.use(express.static(reactPath));
   app.get('/api/v1/', (_, res: Response) => {
     res.send({
       version: 1,
