@@ -56,7 +56,7 @@ export const getAccessToken = async (req: Request, res: Response) => {
   }
 };
 
-export const intializeUser = async (_: Request, res: Response) => {
+export const intializeUser = async (req: Request, res: Response) => {
   try {
     const { data } = await getGithubUser();
 

@@ -13,12 +13,8 @@ axiosInstance.setDefaults({
 
 const config = { withCredentials: true };
 
-type GetUserBody = AxiosRequestConfig & {
-  code: string;
-};
-
-export const getUser = (body: GetUserBody) => {
-  return axiosInstance.post('/initialize-github', body);
+export const getUser = () => {
+  return axiosInstance.get('/user');
 };
 
 export const uploadResume = (formData: FormData) => {

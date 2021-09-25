@@ -7,24 +7,17 @@ import { useGitHubContext } from '../context/github';
 import { GitHubUser } from '../types/github';
 import { getUser } from '../api/api';
 
-const OauthCallback: NextPage = () => {
+const Home: NextPage = () => {
   const router = useRouter();
   const { query } = useRouter();
   const { authenticate, user } = useGitHubContext();
 
   useEffect(() => {
-    const fetchUser = async () => {
-      const body = {
-        code: query.code as string
-      };
-      if (query) {
-        const { data, ...rest } = await getUser(body);
-        if (data) authenticate(data as GitHubUser);
-      }
-    };
-
-    if (query?.code) fetchUser();
-  }, [query]);
+    (async () => {
+      const { data } = await getUser();
+      if (data) authenticate(data as GitHubUser);
+    })();
+  }, []);
 
   const goTo = (path: string) => {
     router.push(path);
@@ -59,4 +52,4 @@ const OauthCallback: NextPage = () => {
   );
 };
 
-export default OauthCallback;
+export default Home;

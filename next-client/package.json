@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "build:prod": "next build && next export && rm -rf ../server/dist/views/* && mv ./out/* ../server/dist/views/"
   },
   "dependencies": {
     "@react-pdf/renderer": "^2.0.19",

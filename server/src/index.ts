@@ -15,12 +15,20 @@ import { GithubAPI } from './github/index';
 import { COOKIE_NAME } from './constants';
 import { User } from './entity/User';
 import { gitHubRouter } from './routes/githubRoutes';
+import {
+  getGithubAccessToken,
+  getGithubUser,
+  setGitHubToken
+} from './github/api';
+import { getAccessToken } from './controllers/githubController';
 
 interface ExpressFileUploadRequest extends Request {
   files: {
     resume?: any;
   };
 }
+
+const reactPath = path.join(__dirname, '/views/');
 
 const __prod__ = process.env.NODE_ENV === 'production';
 const PORT = process.env.PORT || 8080;
@@ -88,6 +96,16 @@ const ghAuthCheck = (req: Request, res: Response, next: NextFunction) => {
     })
   );
 
+  app.use(express.static(reactPath));
+
+  app.get('/', (_, res: Response) =>
+    res.sendFile(path.resolve(reactPath, 'index.html'))
+  );
+
+  app.get('/home', (_, res: Response) =>
+    res.sendFile(path.resolve(reactPath, 'home.html'))
+  );
+
   app.get('/api/v1/', (_, res: Response) => {
     res.send({
       version: 1,
@@ -120,9 +138,7 @@ const ghAuthCheck = (req: Request, res: Response, next: NextFunction) => {
     '/check-repo-existing',
     ghAuthCheck,
     async (req: Request, res: Response) => {
-      const { success, error, repoExists } = await github.checkIfRepoExists(
-        req.session.token
-      );
+      const { success, error, repoExists } = await github.checkIfRepoExists();
       res.send({ success, error, repoExists });
     }
   );
@@ -160,6 +176,15 @@ const ghAuthCheck = (req: Request, res: Response, next: NextFunction) => {
       return res.send({ wow: 'hello' });
     }
   );
+
+  app.get('/oauth-callback', async (req: Request, res: Response) => {
+    const { code } = req.query;
+    const { data } = await getGithubAccessToken(code as string);
+    const token = (data as string).slice(13, (data as string).indexOf('&'));
+    req.session.token = token;
+    setGitHubToken(token);
+    return res.redirect('/home');
+  });
 
   app.listen(PORT, () => console.log(`server started on ${PORT}`));
 })().catch((error: any) => {

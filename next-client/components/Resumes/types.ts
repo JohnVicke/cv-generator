@@ -26,7 +26,7 @@ export type DefaultSubSectionProps = {
 };
 
 export type SpecialSectionProps = {
-  items?: [];
+  specialItems?: [];
 };
 
 export type DefaultSectionProps = {
